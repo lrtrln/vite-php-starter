@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Les pages PHP sont surveillées : les nouvelles classes sont prises en compte sans redémarrer Vite. */
+@source "../../**/*.php";
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #0f766e;
+}
