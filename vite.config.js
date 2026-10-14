@@ -1,15 +1,13 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
 const root = dirname(fileURLToPath(import.meta.url));
-const port = Number(process.env.VITE_PORT || 5173);
-const host = process.env.VITE_HOST || 'localhost';
 const hotFile = resolve(root, 'public/hot');
 
-function hotFilePlugin() {
+function hotFilePlugin(serverUrl) {
   const removeHotFile = () => {
     if (existsSync(hotFile)) rmSync(hotFile);
   };
@@ -20,7 +18,7 @@ function hotFilePlugin() {
       removeHotFile();
       server.httpServer?.once('listening', () => {
         mkdirSync(dirname(hotFile), { recursive: true });
-        writeFileSync(hotFile, `http://${host}:${port}`);
+        writeFileSync(hotFile, serverUrl);
       });
       process.on('exit', removeHotFile);
       process.on('SIGINT', () => process.exit());
@@ -30,21 +28,38 @@ function hotFilePlugin() {
   };
 }
 
-export default defineConfig({
-  plugins: [tailwindcss(), hotFilePlugin()],
-  server: {
-    host: '0.0.0.0',
-    port,
-    strictPort: true,
-    cors: true,
-    origin: `http://${host}:${port}`,
-  },
-  build: {
-    manifest: true,
-    outDir: 'public/build',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: 'resources/js/app.js',
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, root, 'VITE_');
+  const port = Number(env.VITE_PORT || 5173);
+  const configuredHost = env.VITE_HOST || 'localhost';
+  const host = configuredHost.startsWith('http')
+    ? new URL(configuredHost).hostname
+    : configuredHost;
+  const serverUrl = `http://${host}:${port}`;
+
+  return {
+    base: './',
+    publicDir: false,
+    plugins: [tailwindcss(), hotFilePlugin(serverUrl)],
+    server: {
+      host: '0.0.0.0',
+      port,
+      strictPort: true,
+      cors: true,
+      origin: serverUrl,
+      hmr: {
+        host,
+        protocol: 'ws',
+        clientPort: port,
+      },
     },
-  },
+    build: {
+      manifest: true,
+      outDir: 'public/build',
+      emptyOutDir: true,
+      rollupOptions: {
+        input: 'resources/js/app.js',
+      },
+    },
+  };
 });

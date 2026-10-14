@@ -66,8 +66,13 @@ Deploy the generated `public/build` directory alongside the PHP files, and make 
 
 ## Environment variables
 
-The Vite server defaults to `localhost:5173`. Override either value when needed:
+The Vite server defaults to `localhost:5173`. Configure the public address used by the browser in a `.env` file when the PHP site is accessed from another machine or through a local network address:
 
-```bash
-VITE_HOST=127.0.0.1 VITE_PORT=5174 npm run dev
+```env
+VITE_HOST=192.168.0.xx
+VITE_PORT=5173
 ```
+
+`VITE_HOST` can also be a full URL (for example `http://192.168.0.xx/my-project/`); only its host is used by Vite. Start the development server with `npm run dev`. It creates `public/hot` with the Vite URL, allowing `vite_tags()` to load `@vite/client` and enable hot reload.
+
+When `npm run build` runs, `public/hot` is removed and PHP loads the versioned files from `public/build` instead. The production build does not require Vite to be running.

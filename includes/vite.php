@@ -6,6 +6,7 @@ function vite_tags(string $entry = 'resources/js/app.js'): string
 {
     $root = dirname(__DIR__);
     $hotFile = $root . '/public/hot';
+    $basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
 
     if (is_file($hotFile)) {
         $server = rtrim(trim((string) file_get_contents($hotFile)), '/');
@@ -35,11 +36,11 @@ function vite_tags(string $entry = 'resources/js/app.js'): string
 
     $tags = [];
     foreach ($asset['css'] ?? [] as $css) {
-        $tags[] = '<link rel="stylesheet" href="/public/build/' . htmlspecialchars($css, ENT_QUOTES, 'UTF-8') . '">';
+        $tags[] = '<link rel="stylesheet" href="' . $basePath . '/public/build/' . htmlspecialchars($css, ENT_QUOTES, 'UTF-8') . '">';
     }
 
     if (isset($asset['file'])) {
-        $tags[] = '<script type="module" src="/public/build/' . htmlspecialchars($asset['file'], ENT_QUOTES, 'UTF-8') . '"></script>';
+        $tags[] = '<script type="module" src="' . $basePath . '/public/build/' . htmlspecialchars($asset['file'], ENT_QUOTES, 'UTF-8') . '"></script>';
     }
 
     return implode("\n", $tags);
